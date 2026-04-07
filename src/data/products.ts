@@ -118,10 +118,14 @@ export const products: Product[] = [
   flp('Lime', 'Citrus', ['Lime Oil', 'Lime Juice', 'Key Lime'], ['Fresh Lime'], ['Mexico', 'India', 'Brazil', 'Peru'], ['USA', 'Germany', 'France']),
 
   // ===== FLAVOUR - Fish / Seafood =====
-  flp('Fish/Seafood Extracts', 'Fish / Seafood', ['Fish Extract', 'Seafood Flavour', 'Fish Sauce'], ['Fish', 'Shrimp', 'Crab'], ['Thailand', 'Vietnam', 'China', 'Japan'], ['USA', 'Germany', 'UK']),
+  flp('Whitefish - Haddock >1kg - Denmark', 'Fish / Seafood', ['Haddock Denmark', 'Melanogrammus aeglefinus'], ['Haddock'], ['Denmark', 'Norway', 'Iceland'], ['France', 'UK', 'Germany']),
+  flp('Whitefish - Haddock >49.5cm - UK', 'Fish / Seafood', ['Haddock UK', 'British Haddock'], ['Haddock'], ['UK', 'Norway', 'Iceland'], ['France', 'Spain', 'Italy']),
+  flp('Whitefish - Plaice >1.0kg - Iceland', 'Fish / Seafood', ['Plaice Iceland', 'Pleuronectes platessa'], ['Plaice'], ['Iceland', 'Denmark', 'Netherlands'], ['UK', 'France', 'Germany']),
 
   // ===== FLAVOUR - Spice =====
-  flp('Black Pepper / Oil', 'Spice', ['Black Pepper Oil', 'Piper Nigrum', 'Pepper Oleoresin'], ['Black Peppercorns'], ['Vietnam', 'India', 'Brazil', 'Indonesia'], ['USA', 'Germany', 'UK']),
+  flp('Pepper Black Extract (Indonesia)', 'Spice', ['Black Pepper Extract Indonesia', 'Piper Nigrum Indonesia'], ['Black Peppercorns'], ['Indonesia'], ['USA', 'Germany', 'Netherlands']),
+  flp('Pepper Black Extract (Vietnam)', 'Spice', ['Black Pepper Extract Vietnam', 'Piper Nigrum Vietnam'], ['Black Peppercorns'], ['Vietnam'], ['USA', 'Germany', 'UK']),
+  flp('Pepper Black Extract (India)', 'Spice', ['Black Pepper Extract India', 'Piper Nigrum India'], ['Black Peppercorns'], ['India'], ['USA', 'Germany', 'UK']),
 
   // ===== FLAVOUR - Herbs =====
   flp('Ginger', 'Herbs', ['Ginger Oil', 'Ginger Extract', 'Zingiber Officinale'], ['Fresh Ginger Root'], ['China', 'India', 'Nigeria', 'Thailand'], ['USA', 'Japan', 'Germany']),
