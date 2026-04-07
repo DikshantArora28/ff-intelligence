@@ -1,65 +1,191 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { products, fragranceBuckets, flavourBuckets } from '@/data/products';
+import { Category, Bucket, Product } from '@/types';
+import { usePriceData } from '@/lib/priceStore';
+import BulkUpload from '@/components/BulkUpload';
+
+const categoryConfig = {
+  fragrance: {
+    label: 'Fragrance',
+    buckets: fragranceBuckets,
+    activeBg: 'bg-purple-600',
+    activeBucket: 'bg-purple-600/10 text-purple-400 border-purple-500/40',
+    tag: 'text-purple-400 bg-purple-500/15',
+  },
+  flavour: {
+    label: 'Flavour',
+    buckets: flavourBuckets,
+    activeBg: 'bg-emerald-600',
+    activeBucket: 'bg-emerald-600/10 text-emerald-400 border-emerald-500/40',
+    tag: 'text-emerald-400 bg-emerald-500/15',
+  },
+};
+
+const bucketIcons: Record<string, string> = {
+  'Petrochemical': '🧪', 'Oleo Chemical': '🫒', 'Turpentine': '🌲',
+  'Naturals': '🌿', 'Others': '📦', 'Chicken / Beef / Meat': '🥩',
+  'Dairy and Cheese': '🧀', 'Onion and Garlic': '🧅', 'Citrus': '🍋',
+  'Fish / Seafood': '🐟', 'Spice': '🌶️', 'Herbs': '🌱',
+};
+
+export default function Dashboard() {
+  const [activeCategory, setActiveCategory] = useState<Category>('fragrance');
+  const [activeBucket, setActiveBucket] = useState<Bucket>('Petrochemical');
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const { productCount } = usePriceData();
+
+  const config = categoryConfig[activeCategory];
+  const filteredProducts = products.filter(
+    p => p.category === activeCategory && p.bucket === activeBucket
+  );
+
+  function handleCategoryChange(cat: Category) {
+    setActiveCategory(cat);
+    setActiveBucket(cat === 'fragrance' ? 'Petrochemical' : 'Chicken / Beef / Meat');
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="max-w-[1440px] mx-auto px-6 py-5">
+      {/* Category Tabs + Bulk Upload */}
+      <div className="flex items-center gap-2 mb-4">
+        {(Object.keys(categoryConfig) as Category[]).map(cat => {
+          const c = categoryConfig[cat];
+          const isActive = activeCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategoryChange(cat)}
+              className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all ${
+                isActive
+                  ? `${c.activeBg} text-white shadow-lg`
+                  : 'bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)] hover:bg-[var(--card-hover)]'
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {c.label}
+              <span className={`ml-2 text-xs ${isActive ? 'bg-white/20' : 'opacity-60'} px-1.5 py-0.5 rounded-full`}>
+                {products.filter(p => p.category === cat).length}
+              </span>
+            </button>
+          );
+        })}
+
+        {/* Bulk Upload Button */}
+        <div className="ml-auto flex items-center gap-2">
+          {productCount > 0 && (
+            <span className="text-xs text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full font-medium">
+              {productCount} products loaded
+            </span>
+          )}
+          <button
+            onClick={() => setShowBulkUpload(true)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-1.5"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1v9m0 0L5 7m3 3l3-3M2 12v1a2 2 0 002 2h8a2 2 0 002-2v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Upload All Prices
+          </button>
+        </div>
+      </div>
+
+      {/* Bulk Upload Modal */}
+      <BulkUpload open={showBulkUpload} onClose={() => setShowBulkUpload(false)} />
+
+      {/* Sub-bucket Navigation */}
+      <div className="flex flex-wrap gap-1.5 mb-4">
+        {config.buckets.map(bucket => {
+          const isActive = activeBucket === bucket;
+          const count = products.filter(p => p.category === activeCategory && p.bucket === bucket).length;
+          return (
+            <button
+              key={bucket}
+              onClick={() => setActiveBucket(bucket)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+                isActive
+                  ? `${config.activeBucket} border`
+                  : 'bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)] hover:bg-[var(--card-hover)]'
+              }`}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+              <span className="text-sm">{bucketIcons[bucket] || '📦'}</span>
+              {bucket}
+              <span className="opacity-50">({count})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Products - Compact Table/List */}
+      <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-[var(--border)] text-xs text-[var(--muted)] uppercase tracking-wider">
+              <th className="text-left py-2.5 px-4 font-semibold">Product</th>
+              <th className="text-left py-2.5 px-4 font-semibold hidden sm:table-cell">Synonym</th>
+              <th className="text-left py-2.5 px-4 font-semibold hidden md:table-cell">Key Producers</th>
+              <th className="text-left py-2.5 px-4 font-semibold hidden lg:table-cell">Key Importers</th>
+              <th className="text-right py-2.5 px-4 font-semibold w-8"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredProducts.map((product, idx) => (
+              <ProductRow key={product.id} product={product} config={config} isLast={idx === filteredProducts.length - 1} />
+            ))}
+          </tbody>
+        </table>
+        {filteredProducts.length === 0 && (
+          <div className="text-center py-12 text-[var(--muted)]">
+            <p>No products in this category yet</p>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function ProductRow({ product, isLast }: { product: Product; config: typeof categoryConfig.fragrance; isLast: boolean }) {
+  const router = useRouter();
+  return (
+    <tr
+      onClick={() => router.push(`/product/${product.id}`)}
+      className={`hover:bg-[var(--card-hover)] transition-colors cursor-pointer group ${!isLast ? 'border-b border-[var(--border)]' : ''}`}
+    >
+      <td className="py-2.5 px-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm">{bucketIcons[product.bucket] || '📦'}</span>
+          <span className="font-semibold text-sm text-[var(--foreground)] group-hover:text-[var(--primary-light)] transition-colors">
+            {product.name}
+          </span>
+        </div>
+      </td>
+      <td className="py-2.5 px-4 hidden sm:table-cell">
+        <span className="text-xs text-[var(--muted)] truncate block max-w-[180px]">
+          {product.synonyms[0] || '—'}
+        </span>
+      </td>
+      <td className="py-2.5 px-4 hidden md:table-cell">
+        <div className="flex items-center gap-1 flex-wrap">
+          {product.producingCountries.slice(0, 3).map((c, i) => (
+            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium">{c}</span>
+          ))}
+          {product.producingCountries.length > 3 && (
+            <span className="text-[10px] text-[var(--muted)]">+{product.producingCountries.length - 3}</span>
+          )}
+        </div>
+      </td>
+      <td className="py-2.5 px-4 hidden lg:table-cell">
+        <div className="flex items-center gap-1 flex-wrap">
+          {product.importingCountries.slice(0, 3).map((c, i) => (
+            <span key={i} className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">{c}</span>
+          ))}
+          {product.importingCountries.length > 3 && (
+            <span className="text-[10px] text-[var(--muted)]">+{product.importingCountries.length - 3}</span>
+          )}
+        </div>
+      </td>
+      <td className="py-2.5 px-4 text-right">
+        <span className="text-[var(--muted)] group-hover:text-[var(--primary-light)] transition-colors text-xs">→</span>
+      </td>
+    </tr>
   );
 }
