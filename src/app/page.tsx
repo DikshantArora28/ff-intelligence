@@ -35,12 +35,22 @@ export default function Dashboard() {
   const [activeCategory, setActiveCategory] = useState<Category>('fragrance');
   const [activeBucket, setActiveBucket] = useState<Bucket>('Petrochemical');
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { productCount } = usePriceData();
 
   const config = categoryConfig[activeCategory];
-  const filteredProducts = products.filter(
-    p => p.category === activeCategory && p.bucket === activeBucket
-  );
+
+  // If searching, show results across all categories/buckets
+  const isSearching = searchQuery.trim().length > 0;
+  const filteredProducts = isSearching
+    ? products.filter(p => {
+        const q = searchQuery.toLowerCase();
+        return p.name.toLowerCase().includes(q)
+          || p.synonyms.some(s => s.toLowerCase().includes(q))
+          || p.bucket.toLowerCase().includes(q)
+          || p.feedstocks.some(f => f.toLowerCase().includes(q));
+      })
+    : products.filter(p => p.category === activeCategory && p.bucket === activeBucket);
 
   function handleCategoryChange(cat: Category) {
     setActiveCategory(cat);
@@ -49,8 +59,25 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-[1440px] mx-auto px-6 py-5">
-      {/* Category Tabs + Bulk Upload */}
+      {/* Search + Category Tabs + Bulk Upload */}
       <div className="flex items-center gap-2 mb-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products..."
+            className="w-48 pl-9 pr-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] text-sm placeholder:text-[var(--muted)] focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none transition-all"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)] text-xs">✕</button>
+          )}
+        </div>
+
         {(Object.keys(categoryConfig) as Category[]).map(cat => {
           const c = categoryConfig[cat];
           const isActive = activeCategory === cat;
@@ -92,8 +119,8 @@ export default function Dashboard() {
       {/* Bulk Upload Modal */}
       <BulkUpload open={showBulkUpload} onClose={() => setShowBulkUpload(false)} />
 
-      {/* Sub-bucket Navigation */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
+      {/* Sub-bucket Navigation (hidden when searching) */}
+      {!isSearching && <div className="flex flex-wrap gap-1.5 mb-4">
         {config.buckets.map(bucket => {
           const isActive = activeBucket === bucket;
           const count = products.filter(p => p.category === activeCategory && p.bucket === bucket).length;
@@ -113,7 +140,14 @@ export default function Dashboard() {
             </button>
           );
         })}
-      </div>
+      </div>}
+
+      {/* Search results header */}
+      {isSearching && (
+        <div className="mb-3 text-sm text-[var(--muted)]">
+          Found <strong className="text-[var(--foreground)]">{filteredProducts.length}</strong> results for &quot;{searchQuery}&quot;
+        </div>
+      )}
 
       {/* Products - Compact Table/List */}
       <div className="bg-[var(--surface)] rounded-xl border border-[var(--border)] overflow-hidden">

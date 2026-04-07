@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import { PriceDataProvider } from "@/lib/priceStore";
+import { AuthProvider } from "@/lib/authStore";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,12 +32,14 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <PriceDataProvider>
-          <Header />
-          <main className="flex-1">
-            {children}
-          </main>
-        </PriceDataProvider>
+        <AuthProvider>
+          <PriceDataProvider>
+            <Header />
+            <main className="flex-1">
+              {children}
+            </main>
+          </PriceDataProvider>
+        </AuthProvider>
       </body>
     </html>
   );

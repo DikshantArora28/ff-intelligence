@@ -9,11 +9,13 @@ import FeedstockNewsModule from '@/components/product/FeedstockNews';
 import SeasonalityModule from '@/components/product/SeasonalityChart';
 import ForecastModule from '@/components/product/ForecastEngine';
 import MarketSharePanel from '@/components/product/MarketSharePanel';
+import AuthGate from '@/components/AuthGate';
+import CommentaryValidation from '@/components/product/CommentaryValidation';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const product = getProductById(id);
-  const [activeTab, setActiveTab] = useState<'value-chain' | 'news' | 'seasonality' | 'forecast'>('value-chain');
+  const [activeTab, setActiveTab] = useState<'value-chain' | 'news' | 'seasonality' | 'forecast' | 'validation'>('value-chain');
 
   if (!product) {
     return (
@@ -30,6 +32,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     { key: 'news' as const, label: 'Market Intelligence', icon: '📰' },
     { key: 'seasonality' as const, label: 'Seasonality', icon: '📊' },
     { key: 'forecast' as const, label: 'Forecasting', icon: '📈' },
+    { key: 'validation' as const, label: 'Validation', icon: '✅' },
   ];
 
   return (
@@ -94,8 +97,21 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <FeedstockNewsModule product={product} />
           </div>
         )}
-        {activeTab === 'seasonality' && <SeasonalityModule productId={product.id} />}
-        {activeTab === 'forecast' && <ForecastModule productId={product.id} />}
+        {activeTab === 'seasonality' && (
+          <AuthGate feature="Seasonality Analysis">
+            <SeasonalityModule productId={product.id} />
+          </AuthGate>
+        )}
+        {activeTab === 'forecast' && (
+          <AuthGate feature="Forecasting Engine">
+            <ForecastModule productId={product.id} />
+          </AuthGate>
+        )}
+        {activeTab === 'validation' && (
+          <AuthGate feature="Price-Commentary Validation">
+            <CommentaryValidation />
+          </AuthGate>
+        )}
       </div>
     </div>
   );
